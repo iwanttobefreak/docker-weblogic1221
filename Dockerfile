@@ -11,7 +11,7 @@ RUN mkdir -p /u01/install && mkdir -p /u01/scripts
 # EINES
 RUN yum install -y tar
 
-COPY scrics/install_weblogic1036.sh /u01/install/install_weblogic1036.sh
+COPY scrics/install_weblogic.sh /u01/install/install_weblogic.sh
 COPY scrics/template1036.jar /u01/install/template1036.jar
 COPY scrics/create_domain.ini /u01/install/create_domain.ini
 COPY scrics/start_AdminServer.sh /u01/scripts/start_AdminServer.sh
