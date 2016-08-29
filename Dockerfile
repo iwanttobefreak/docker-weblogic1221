@@ -40,6 +40,6 @@ RUN cd /u01/install && /u01/install/install_weblogic.sh
 RUN cd /u01/install && /u01/scripts/start_AdminServer.sh && ./create_domain.sh create_domain.ini
 
 #Esborrem programari d'instalacio
-#RUN rm -f /u01/install/*
+RUN rm -f /u01/install/*
 
 CMD ["/u01/scripts/start_ALL.sh"]
