@@ -1,63 +1,34 @@
 #!/bin/bash
-if [ -z "$ORACLE_USER" ]
-then
-  exit 0
-fi
 
-v_usuario_oracle="$ORACLE_USER"
-v_contrasenya_oracle=$ORACLE_PASSWORD
-
+v_base=/u01/install
 v_weblogic_user=weblogic
 v_weblogic_password=weblogic01
-v_ruta_binarios=/u01/middleware1036
 v_java=/u01/java/bin/java
-v_template=/u01/install/template1036.jar
+v_template=/u01/middleware1221/wlserver/common/templates/wls/wls.jar
 v_ruta_dominio=/u01/domains
 v_nou_template=/tmp/$$_nou_template.jar
 v_nombre_dominio=mydomain
 v_cookie=/tmp/$$_cookie
-v_download=http://download.oracle.com/otn/nt/middleware/11g/wls/1036/wls1036_generic.jar
-v_software=/u01/install/wls1036_generic.jar
-v_tmp_silent=/tmp/$$_silent.xml
 
-cd /u01/install
+v_ruta_binarios=/u01/middleware1221
+v_software=fmw_12.2.1.1.0_wls.jar
+v_software_java=jdk-8u92-linux-x64.tar.gz
 
-# Descarga de JVM
-curl -A "Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101 Firefox/38.0 Iceweasel/38.6.0" \
--b 'oraclelicense=accept-dbindex-cookie' \
--OL http://download.oracle.com/otn-pub/java/jdk/7u79-b15/jdk-7u79-linux-x64.tar.gz
+if [ -f $v_base/local/$v_software ] && [ -f $v_base/local/$v_software_java ]
+then
+  echo "Software en local"
+  v_base=$v_base"/local"
+fi
 
-v_Site2pstoreToken=`curl -s -A "Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0" -L $v_download | grep site2pstoretoken | awk -Fsite2pstoretoken {'print $2'}|awk -F\= {'print  $2'}|awk -F\" {'print $2'}`
-
-curl -s -A "Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101 Firefox/38.0 Iceweasel/38.6.0"  \
--d 'ssousername='$v_usuario_oracle'&password='$v_contrasenya_oracle'&site2pstoretoken='$v_Site2pstoreToken \
--o /dev/null \
-https://login.oracle.com/sso/auth -c $v_cookie
-
-echo '.oracle.com	TRUE	/	FALSE	0	oraclelicense	accept-dbindex-cookie' >> $v_cookie
-
-curl -A "Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101 Firefox/38.0 Iceweasel/38.6.0" \
--b $v_cookie \
--OL $v_download
+cd $v_base
 
 #Instalacion JVM
-tar -xzvf /u01/install/jdk-7u79-linux-x64.tar.gz -C /u01/install
-mv /u01/install/jdk1.7.0_79 /u01/java
+tar -xzvf $v_base/$v_software_java -C $v_base
+mv $v_base/jdk1* /u01/java
 
-#Instalación Weblogic
-echo '<?xml version="1.0" encoding="UTF-8"?>
-<domain-template-descriptor>
-<input-fields>
-   <data-value name="BEAHOME"                   value="'$v_ruta_binarios'" />
-   <data-value name="USER_INSTALL_DIR"          value="'$v_ruta_binarios'" />
-   <data-value name="INSTALL_NODE_MANAGER_SERVICE"   value="no" />
-   <data-value name="COMPONENT_PATHS" value="WebLogic Server" />
-</input-fields>
-</domain-template-descriptor>' > $v_tmp_silent
+$v_java -Djava.security.egd=file:/dev/./urandom -jar $v_base/$v_software -silent -responseFile $v_base/response_file -invPtrLoc $v_base/oraInst.loc
 
-$v_java -jar $v_software -mode=silent -silent_xml=$v_tmp_silent
-
-source $v_ruta_binarios/wlserver_10.3/server/bin/setWLSEnv.sh
+source $v_ruta_binarios/wlserver/server/bin/setWLSEnv.sh
 
 $v_java weblogic.WLST <<EOF
 readTemplate('$v_template')
